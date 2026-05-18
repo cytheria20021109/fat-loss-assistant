@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#26362f">
+    <title>减脂状态助手</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="page-frame" aria-hidden="true"></div>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Atelier de Forme</p>
+        <h1>减脂状态助手</h1>
+        <p class="subhead">输入今天的状态，生成饮食、饮品和训练安排。数据只保存在本机浏览器。</p>
+      </div>
+      <div class="target-card">
+        <span>旅行倒计时</span>
+        <strong id="daysLeft">--</strong>
+        <small>到 2026-05-29</small>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <nav class="tabs" aria-label="页面切换">
+        <button class="tab is-active" data-tab="today">今日计划</button>
+        <button class="tab" data-tab="ingredients">食材库</button>
+        <button class="tab" data-tab="training">力量训练</button>
+        <button class="tab" data-tab="review">复盘</button>
+      </nav>
+
+      <section class="panel is-active" id="todayPanel">
+        <section class="section-band">
+          <div class="section-title">
+            <h2>今日状态</h2>
+            <p>少量输入，系统按规则分析，不随机。</p>
+          </div>
+
+          <form id="stateForm" class="state-grid">
+            <label class="field">
+              <span>日期</span>
+              <input type="date" id="date">
+            </label>
+            <label class="field">
+              <span>体重 kg</span>
+              <input type="number" step="0.1" min="35" max="100" id="weight" value="57.5">
+            </label>
+            <label class="field">
+              <span>睡眠小时</span>
+              <input type="number" step="0.5" min="0" max="14" id="sleepHours" value="7">
+            </label>
+            <label class="field">
+              <span>入睡时间</span>
+              <input type="time" id="bedTime" value="02:00">
+            </label>
+
+            <label class="slider-field">
+              <span>饥饿程度 <b id="hungerValue">5</b>/10</span>
+              <input type="range" min="1" max="10" value="5" id="hunger">
+            </label>
+            <label class="slider-field">
+              <span>压力/烦躁 <b id="stressValue">4</b>/10</span>
+              <input type="range" min="1" max="10" value="4" id="stress">
+            </label>
+            <label class="slider-field">
+              <span>精神/体力 <b id="energyValue">6</b>/10</span>
+              <input type="range" min="1" max="10" value="6" id="energy">
+            </label>
+            <label class="slider-field">
+              <span>可运动时间 <b id="minutesValue">50</b> 分钟</span>
+              <input type="range" min="0" max="90" step="5" value="50" id="exerciseMinutes">
+            </label>
+
+            <div class="choice-group">
+              <span>今日口味</span>
+              <div class="segmented" id="flavorGroup">
+                <button type="button" data-value="spicy">辣</button>
+                <button type="button" data-value="fresh" class="is-selected">清爽</button>
+                <button type="button" data-value="japanese">日式</button>
+                <button type="button" data-value="chinese">中式清炒</button>
+                <button type="button" data-value="pepper">黑椒</button>
+                <button type="button" data-value="garlic">蒜香</button>
+              </div>
+            </div>
+
+            <div class="switch-grid">
+              <label class="switch"><input type="checkbox" id="wantCarb" checked><span>想保留碳水</span></label>
+              <label class="switch"><input type="checkbox" id="wantSweet"><span>想喝甜的</span></label>
+              <label class="switch"><input type="checkbox" id="wantCoffee" checked><span>想喝咖啡</span></label>
+              <label class="switch"><input type="checkbox" id="outsideMeal"><span>今天可能外食</span></label>
+              <label class="switch"><input type="checkbox" id="periodOrUnwell"><span>经期/不舒服</span></label>
+              <label class="switch"><input type="checkbox" id="swimBuddy"><span>今天有游泳搭子</span></label>
+            </div>
+
+            <label class="field wide">
+              <span>今天特别想吃/不想吃</span>
+              <input type="text" id="foodMood" placeholder="例如：想吃三文鱼，不想吃包菜">
+            </label>
+            <label class="field wide">
+              <span>备注</span>
+              <textarea id="notes" rows="3" placeholder="身体状态、情绪、外食、称重情况都可以写"></textarea>
+            </label>
+          </form>
+
+          <div class="action-row">
+            <button class="primary" id="generatePlan">生成今日计划</button>
+            <button class="secondary" id="saveRecord">保存今日记录</button>
+          </div>
+        </section>
+
+        <section class="section-band combo-band">
+          <div class="section-title">
+            <h2>搭配组合</h2>
+            <p>做饭前临时加减食材，实时看这一组的 kcal 和蛋白质。</p>
+          </div>
+          <div class="combo-layout">
+            <div class="combo-controls">
+              <label class="field">
+                <span>组合名称</span>
+                <input id="comboName" value="这一餐" placeholder="例如：午餐碗 / 晚餐清炒">
+              </label>
+              <label class="field">
+                <span>加入食材</span>
+                <select id="comboIngredient"></select>
+              </label>
+              <label class="field">
+                <span>数量</span>
+                <input id="comboPortion" type="number" min="0.25" step="0.25" value="1">
+              </label>
+              <label class="field">
+                <span>调味估算</span>
+                <select id="seasoningPreset">
+                  <option value="none">不额外计算 0 kcal</option>
+                  <option value="light">清蒸/凉拌 20 kcal</option>
+                  <option value="daily" selected>日常调味 60 kcal</option>
+                  <option value="stirFry">清炒/煎 100 kcal</option>
+                  <option value="sauce">酱汁偏多 150 kcal</option>
+                </select>
+              </label>
+              <div class="action-row compact-action">
+                <button class="primary" id="addComboItem" type="button">加入组合</button>
+                <button class="secondary" id="saveComboMeal" type="button">保存为饮食记录</button>
+                <button class="secondary" id="clearCombo" type="button">清空组合</button>
+              </div>
+            </div>
+            <aside class="combo-total" aria-live="polite">
+              <span id="comboTitle">这一餐</span>
+              <strong id="comboKcal">0 kcal</strong>
+              <small id="comboProtein">蛋白 0g</small>
+            </aside>
+          </div>
+          <div class="combo-list" id="comboList"></div>
+        </section>
+
+        <section class="result-grid" id="planResult" aria-live="polite"></section>
+      </section>
+
+      <section class="panel" id="ingredientsPanel">
+        <section class="section-band">
+          <div class="section-title">
+            <h2>食材库</h2>
+            <p>推荐会避开“不想吃/已吃完”，优先使用“优先吃”。</p>
+          </div>
+          <form id="ingredientForm" class="ingredient-form">
+            <input type="hidden" id="ingredientId">
+            <label class="field"><span>名称</span><input id="ingredientName" required placeholder="虾仁"></label>
+            <label class="field">
+              <span>类别</span>
+              <select id="ingredientCategory">
+                <option value="protein">蛋白质</option>
+                <option value="vegetable">蔬菜</option>
+                <option value="carb">碳水</option>
+                <option value="fruit">水果</option>
+                <option value="fat">脂肪/坚果</option>
+                <option value="drink">饮品</option>
+                <option value="seasoning">调味</option>
+              </select>
+            </label>
+            <label class="field"><span>库存量</span><input id="ingredientAmount" type="number" step="0.5" min="0" value="1"></label>
+            <label class="field"><span>计量单位</span><input id="ingredientUnit" placeholder="100g / 1个 / 1勺 / 1小碗" value="100g"></label>
+            <label class="field"><span>每单位 kcal</span><input id="ingredientKcal" type="number" step="1" min="0" placeholder="例如 120"></label>
+            <label class="field"><span>蛋白质 g/单位</span><input id="ingredientProtein" type="number" step="0.5" min="0" placeholder="例如 20"></label>
+            <label class="field"><span>备注</span><input id="ingredientNote" placeholder="例如：快吃掉"></label>
+            <div class="switch-grid compact">
+              <label class="switch"><input type="checkbox" id="ingredientPriority"><span>优先吃</span></label>
+              <label class="switch"><input type="checkbox" id="ingredientRawSafe"><span>适合生食</span></label>
+              <label class="switch"><input type="checkbox" id="ingredientFrozen"><span>冷冻</span></label>
+              <label class="switch"><input type="checkbox" id="ingredientAvoid"><span>今天不想吃</span></label>
+              <label class="switch"><input type="checkbox" id="ingredientDone"><span>已吃完</span></label>
+            </div>
+            <div class="action-row">
+              <button class="primary" type="submit">保存食材</button>
+              <button class="secondary" type="button" id="resetIngredient">清空表单</button>
+            </div>
+          </form>
+        </section>
+        <div class="ingredient-list" id="ingredientList"></div>
+      </section>
+
+      <section class="panel" id="trainingPanel">
+        <section class="section-band">
+          <div class="section-title">
+            <h2>力量训练</h2>
+            <p>先看本周部位，再按部位推荐动作。</p>
+          </div>
+          <div class="muscle-week" id="muscleWeek"></div>
+          <div class="training-controls">
+            <label class="field">
+              <span>想练部位</span>
+              <select id="muscleSelect">
+                <option value="auto">自动推荐未练部位</option>
+                <option value="glutesLegs">臀腿</option>
+                <option value="back">背</option>
+                <option value="chestShoulder">胸肩</option>
+                <option value="core">核心</option>
+                <option value="fullBody">全身轻量</option>
+              </select>
+            </label>
+            <button class="primary" id="generateStrength">生成力量动作</button>
+          </div>
+          <div id="strengthPlan" class="strength-plan"></div>
+        </section>
+      </section>
+
+      <section class="panel" id="reviewPanel">
+        <section class="section-band">
+          <div class="section-title">
+            <h2>复盘</h2>
+            <p>最近 3 天趋势会影响之后的计划。</p>
+          </div>
+          <div class="review-summary" id="reviewSummary"></div>
+          <div class="history-list" id="historyList"></div>
+        </section>
+      </section>
+    </main>
+
+    <template id="planCardTemplate">
+      <article class="plan-card">
+        <h3></h3>
+        <div class="card-body"></div>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
