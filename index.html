@@ -226,6 +226,31 @@
           </div>
           <div id="strengthPlan" class="strength-plan"></div>
         </section>
+        <section class="section-band">
+          <div class="section-title">
+            <h2>有氧记录</h2>
+            <p>记录单车、散步或游泳，按本周分钟数看完成度。</p>
+          </div>
+          <div class="aerobic-week" id="aerobicWeek"></div>
+          <div class="training-controls">
+            <label class="field">
+              <span>有氧类型</span>
+              <select id="aerobicType">
+                <option value="bike">单车</option>
+                <option value="walk">散步</option>
+                <option value="swim">游泳</option>
+                <option value="stretchWalk">散步 + 拉伸</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>分钟数</span>
+              <input id="aerobicMinutes" type="number" min="5" max="120" step="5" value="20">
+            </label>
+            <button class="primary" id="completeAerobic" type="button">记录完成</button>
+            <button class="secondary" id="skipAerobic" type="button">今天跳过</button>
+          </div>
+          <div id="aerobicLog" class="aerobic-log"></div>
+        </section>
       </section>
 
       <section class="panel" id="reviewPanel">

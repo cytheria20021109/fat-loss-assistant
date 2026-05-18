@@ -1,4 +1,4 @@
-const CACHE_NAME = "fat-loss-assistant-v2";
+const CACHE_NAME = "fat-loss-assistant-v3";
 const APP_SHELL = [
   "./",
   "./index.html",

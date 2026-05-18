@@ -3,6 +3,7 @@ const STORE_KEYS = {
   ingredients: "fatLoss.ingredients.v1",
   records: "fatLoss.records.v1",
   training: "fatLoss.training.v1",
+  aerobic: "fatLoss.aerobic.v1",
   meals: "fatLoss.meals.v1"
 };
 
@@ -17,6 +18,13 @@ const muscleLabels = {
   chestShoulder: "胸肩",
   core: "核心",
   fullBody: "全身轻量"
+};
+
+const aerobicLabels = {
+  bike: "单车",
+  walk: "散步",
+  swim: "游泳",
+  stretchWalk: "散步 + 拉伸"
 };
 
 const exerciseLibrary = {
@@ -120,6 +128,7 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 let ingredients = loadArray(STORE_KEYS.ingredients, defaultIngredients);
 let records = loadArray(STORE_KEYS.records, []);
 let training = loadArray(STORE_KEYS.training, []);
+let aerobicRecords = loadArray(STORE_KEYS.aerobic, []);
 let meals = loadArray(STORE_KEYS.meals, []);
 let selectedFlavor = "fresh";
 let currentPlan = null;
@@ -520,6 +529,22 @@ function weeklyMuscleCounts(dateString = todayString()) {
     }, {});
 }
 
+function weeklyAerobicSummary(dateString = todayString()) {
+  const week = startOfWeek(dateString);
+  return aerobicRecords
+    .filter((item) => item.date >= week)
+    .reduce((summary, item) => {
+      if (item.status === "done") {
+        summary.minutes += Number(item.minutes) || 0;
+        summary.count += 1;
+        summary.byType[item.type] = (summary.byType[item.type] || 0) + (Number(item.minutes) || 0);
+      } else {
+        summary.skipped += 1;
+      }
+      return summary;
+    }, { minutes: 0, count: 0, skipped: 0, byType: {} });
+}
+
 function suggestMuscle(state) {
   const counts = weeklyMuscleCounts(state.date);
   if (state.sleepHours < 6 || state.energy <= 3 || state.hunger >= 8 || state.periodOrUnwell) return "fullBody";
@@ -534,23 +559,38 @@ function deterministicExercises(muscle, state, extraOffset = 0) {
   return [...list.slice(offset), ...list.slice(0, offset)].slice(0, 4);
 }
 
+function suggestAerobic(state, mode) {
+  if (mode === "恢复防崩日" || state.sleepHours < 6 || state.energy <= 3 || state.hunger >= 8 || state.periodOrUnwell) {
+    return { type: "stretchWalk", minutes: Math.min(25, Math.max(15, state.exerciseMinutes || 15)), text: "散步 15-25 分钟 + 拉伸 5 分钟。今天只要把身体顺下来。" };
+  }
+  if (state.swimBuddy) {
+    return { type: "swim", minutes: Math.min(30, Math.max(20, state.exerciseMinutes || 20)), text: "游泳 20-30 分钟可替代单车；如果临时没有搭子，做单车 20 分钟。" };
+  }
+  if (state.exerciseMinutes >= 45) {
+    return { type: "bike", minutes: 20, text: "单车 20 分钟，中等强度微喘 + 饭后散步 15-25 分钟。" };
+  }
+  return { type: "walk", minutes: Math.min(30, Math.max(15, state.exerciseMinutes || 15)), text: "散步 15-30 分钟，保持轻微发热即可。" };
+}
+
 function makeExercisePlan(state, mode) {
   const lowState = mode === "恢复防崩日" || state.exerciseMinutes < 20;
   const muscle = suggestMuscle(state);
   const exercises = deterministicExercises(muscle, state);
+  const aerobicPlan = suggestAerobic(state, mode);
   if (lowState) {
     return {
-      aerobic: "散步 15-25 分钟 + 拉伸 5 分钟。今天不加压，防止睡眠和食欲崩。",
+      aerobic: aerobicPlan.text,
+      aerobicType: aerobicPlan.type,
+      aerobicMinutes: aerobicPlan.minutes,
       muscle,
       strength: ["深呼吸拉伸 5 分钟", "臀桥 1 组 x 12 次", "鸟狗 1 组 x 8 次/侧", "靠墙肩背打开 1 组 x 8 次"],
       intensity: "降级"
     };
   }
-  const aerobic = state.swimBuddy
-    ? "游泳 20-30 分钟可替代单车；如果临时没有搭子，做单车 20 分钟。"
-    : "单车 20 分钟，中等强度微喘 + 饭后散步 15-25 分钟。";
   return {
-    aerobic,
+    aerobic: aerobicPlan.text,
+    aerobicType: aerobicPlan.type,
+    aerobicMinutes: aerobicPlan.minutes,
     muscle,
     strength: exercises,
     intensity: "正常"
@@ -593,7 +633,7 @@ function renderPlan(plan) {
     ["午餐", plan.meals.lunch],
     ["晚餐", plan.meals.dinner],
     ["饮品", plan.drink],
-    ["运动", `${plan.exercise.aerobic}<br><strong>力量部位：</strong>${muscleLabels[plan.exercise.muscle]}<br>${plan.exercise.strength.map((item) => `• ${item}`).join("<br>")}<div class="action-row"><button class="primary" data-complete-strength="${plan.exercise.muscle}">标记力量完成</button><button class="secondary" data-skip-strength="${plan.exercise.muscle}">跳过力量</button></div>`],
+    ["运动", `${plan.exercise.aerobic}<div class="action-row"><button class="primary" data-complete-aerobic="${plan.exercise.aerobicType}" data-aerobic-minutes="${plan.exercise.aerobicMinutes}">标记有氧完成</button><button class="secondary" data-skip-aerobic="${plan.exercise.aerobicType}">跳过有氧</button></div><strong>力量部位：</strong>${muscleLabels[plan.exercise.muscle]}<br>${plan.exercise.strength.map((item) => `• ${item}`).join("<br>")}<div class="action-row"><button class="primary" data-complete-strength="${plan.exercise.muscle}">标记力量完成</button><button class="secondary" data-skip-strength="${plan.exercise.muscle}">跳过力量</button></div>`],
     ["替代方案", plan.meals.alternative],
     ["崩溃版", plan.meals.crash],
     ["复制给 Codex", `<textarea class="copy-box" readonly>${copySummary(plan)}</textarea>`]
@@ -623,7 +663,7 @@ function copySummary(plan) {
     `午餐：${plan.meals.lunch}`,
     `晚餐：${plan.meals.dinner}`,
     `饮品：${plan.drink}`,
-    `运动：${plan.exercise.aerobic}；力量：${muscleLabels[plan.exercise.muscle]}`
+    `有氧：${aerobicLabels[plan.exercise.aerobicType]} ${plan.exercise.aerobicMinutes} 分钟；力量：${muscleLabels[plan.exercise.muscle]}`
   ].join("\n");
 }
 
@@ -742,6 +782,7 @@ function renderTraining(dateString = $("#date").value || todayString()) {
     box.innerHTML = `<strong>${label}</strong><span>${counts[key] ? `本周已练 ${counts[key]} 次` : "本周未练"}${key === suggested ? "｜今日建议" : ""}</span>`;
     week.appendChild(box);
   });
+  renderAerobic(dateString);
 }
 
 function renderStrengthPlan() {
@@ -769,6 +810,66 @@ function renderStrengthPlan() {
   `;
 }
 
+function renderAerobic(dateString = $("#date").value || todayString()) {
+  const state = getState();
+  const mode = analyzeMode(state);
+  const suggestion = suggestAerobic(state, mode);
+  const summary = weeklyAerobicSummary(dateString);
+  const today = aerobicRecords.filter((item) => item.date === dateString);
+  const week = $("#aerobicWeek");
+  if (week) {
+    const target = state.sleepHours < 6 || state.energy <= 3 ? 90 : 120;
+    const percent = Math.min(100, Math.round((summary.minutes / target) * 100));
+    week.innerHTML = `
+      <div class="aerobic-meter">
+        <span>本周有氧</span>
+        <strong>${summary.minutes} / ${target} 分钟</strong>
+        <div class="meter-track"><i style="width: ${percent}%"></i></div>
+      </div>
+      <div class="aerobic-suggestion">
+        <span>今日建议</span>
+        <strong>${aerobicLabels[suggestion.type]} ${suggestion.minutes} 分钟</strong>
+        <p>${suggestion.text}</p>
+      </div>
+    `;
+  }
+  if ($("#aerobicType")) $("#aerobicType").value = suggestion.type;
+  if ($("#aerobicMinutes")) $("#aerobicMinutes").value = suggestion.minutes;
+  const log = $("#aerobicLog");
+  if (!log) return;
+  if (!today.length) {
+    log.innerHTML = `<div class="empty-state">今天还没有有氧记录。完成一点也算，记录是为了看趋势，不是给自己扣分。</div>`;
+    return;
+  }
+  log.innerHTML = today.map((item) => `
+    <article class="history-card">
+      <header>
+        <div>
+          <h3>${aerobicLabels[item.type] || "有氧"}</h3>
+          <p>${item.status === "done" ? `${item.minutes} 分钟` : "已跳过"}｜${item.note || "今日记录"}</p>
+        </div>
+        <span class="tag ${item.status === "done" ? "" : "warn"}">${item.status === "done" ? "完成" : "跳过"}</span>
+      </header>
+    </article>
+  `).join("");
+}
+
+function addAerobicRecord(type, status, minutes = 0, note = "") {
+  const date = $("#date").value || todayString();
+  aerobicRecords = aerobicRecords.filter((item) => !(item.date === date && item.type === type));
+  aerobicRecords.push({
+    date,
+    type,
+    status,
+    minutes: status === "done" ? Number(minutes) || 0 : 0,
+    note,
+    savedAt: new Date().toISOString()
+  });
+  save(STORE_KEYS.aerobic, aerobicRecords);
+  renderAerobic(date);
+  renderReview();
+}
+
 function addTrainingRecord(muscle, status) {
   const date = $("#date").value || todayString();
   training = training.filter((item) => !(item.date === date && item.muscle === muscle));
@@ -785,11 +886,13 @@ function renderReview() {
   const weights = records.map((item) => Number(item.weight)).filter(Boolean);
   const latest = records[records.length - 1];
   const weightChange = weights.length >= 2 ? (weights[weights.length - 1] - weights[0]).toFixed(1) : "--";
+  const aerobicSummary = weeklyAerobicSummary($("#date").value || todayString());
   summary.innerHTML = `
     <div class="summary-grid">
       <div class="summary-item"><strong>${records.length}</strong><br>已保存天数</div>
       <div class="summary-item"><strong>${latest ? latest.weight + "kg" : "--"}</strong><br>最近体重</div>
       <div class="summary-item"><strong>${weightChange}</strong><br>总变化 kg</div>
+      <div class="summary-item"><strong>${aerobicSummary.minutes}</strong><br>本周有氧分钟</div>
     </div>
     <article class="history-card"><strong>趋势建议：</strong>${trendAdvice(getState())}</article>
   `;
@@ -808,6 +911,20 @@ function renderReview() {
         <span class="tag coffee">饮食记录</span>
       </header>
       <p>${meal.items.map((item) => `${item.name} ${item.portion} × ${item.unit}`).join("｜")}</p>
+    `;
+    list.appendChild(card);
+  });
+  aerobicRecords.slice(-5).reverse().forEach((item) => {
+    const card = document.createElement("article");
+    card.className = "history-card";
+    card.innerHTML = `
+      <header>
+        <div>
+          <h3>${item.date}</h3>
+          <p>${aerobicLabels[item.type] || "有氧"}｜${item.status === "done" ? `${item.minutes} 分钟` : "跳过"}${item.note ? `｜${item.note}` : ""}</p>
+        </div>
+        <span class="tag ${item.status === "done" ? "coffee" : "warn"}">有氧记录</span>
+      </header>
     `;
     list.appendChild(card);
   });
@@ -916,11 +1033,21 @@ function initEvents() {
   });
 
   $("#generateStrength").addEventListener("click", renderStrengthPlan);
+  $("#completeAerobic").addEventListener("click", () => {
+    addAerobicRecord($("#aerobicType").value, "done", $("#aerobicMinutes").value, "手动记录");
+  });
+  $("#skipAerobic").addEventListener("click", () => {
+    addAerobicRecord($("#aerobicType").value, "skipped", 0, "今天跳过");
+  });
   document.body.addEventListener("click", (event) => {
     const complete = event.target.dataset.completeStrength;
     const skip = event.target.dataset.skipStrength;
+    const completeAerobic = event.target.dataset.completeAerobic;
+    const skipAerobic = event.target.dataset.skipAerobic;
     if (complete) addTrainingRecord(complete, "done");
     if (skip) addTrainingRecord(skip, "skipped");
+    if (completeAerobic) addAerobicRecord(completeAerobic, "done", event.target.dataset.aerobicMinutes || $("#aerobicMinutes").value, "来自今日计划");
+    if (skipAerobic) addAerobicRecord(skipAerobic, "skipped", 0, "来自今日计划");
     if (event.target.id === "swapExercises") {
       const state = getState();
       const selected = $("#muscleSelect").value;

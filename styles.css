@@ -650,6 +650,7 @@ input[type="range"] {
 .ingredient-list,
 .history-list,
 .strength-plan,
+.aerobic-log,
 .review-summary,
 .combo-list {
   display: grid;
@@ -771,6 +772,55 @@ input[type="range"] {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
   gap: 10px;
+}
+
+.aerobic-week {
+  display: grid;
+  gap: 12px;
+}
+
+.aerobic-meter,
+.aerobic-suggestion {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid rgba(41, 54, 48, 0.16);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.aerobic-meter span,
+.aerobic-suggestion span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .04em;
+}
+
+.aerobic-meter strong,
+.aerobic-suggestion strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+}
+
+.aerobic-suggestion p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.meter-track {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(41, 54, 48, 0.10);
+}
+
+.meter-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--jade), var(--gold));
 }
 
 .muscle-box {
