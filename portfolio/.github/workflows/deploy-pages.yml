@@ -1,21 +1,22 @@
 name: Deploy to GitHub Pages
 
+# 构建静态导出并推送到 gh-pages 分支（Pages 源）。
+# 不用官方 configure-pages/deploy-pages：它们首次开通需要
+# 仓库设置权限，而 gh-pages 分支是自动开通的。
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,27 +28,16 @@ jobs:
 
       - run: npm ci
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
       - name: Build static export
         run: npx next build
         env:
           NEXT_OUTPUT_EXPORT: "1"
           NEXT_PUBLIC_BASE_PATH: /espace-semantique
 
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: out
+      - run: touch out/.nojekyll
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Push to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
