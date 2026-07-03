@@ -1,0 +1,63 @@
+"use client";
+
+import { useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+import { dustVertex, dustFragment } from "@/shaders/dust";
+import { palette } from "@/lib/palette";
+import { CAMERA_PATH } from "@/lib/palette";
+
+const COUNT = 320;
+
+/** 沿相机路径散布的浮尘，提供纵深参照 */
+export function Dust() {
+  const material = useRef<THREE.ShaderMaterial>(null);
+
+  const { positions, phases, scales } = useMemo(() => {
+    const positions = new Float32Array(COUNT * 3);
+    const phases = new Float32Array(COUNT);
+    const scales = new Float32Array(COUNT);
+    for (let i = 0; i < COUNT; i++) {
+      positions[i * 3 + 0] = (Math.random() - 0.5) * 18;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 11;
+      positions[i * 3 + 2] =
+        CAMERA_PATH.start + Math.random() * (CAMERA_PATH.end - 10 - CAMERA_PATH.start);
+      phases[i] = Math.random();
+      scales[i] = 0.6 + Math.random() * 1.6;
+    }
+    return { positions, phases, scales };
+  }, []);
+
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color(palette.brume) },
+    }),
+    []
+  );
+
+  useFrame((state) => {
+    if (material.current) {
+      material.current.uniforms.uTime.value = state.clock.elapsedTime;
+    }
+  });
+
+  return (
+    <points frustumCulled={false}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-aPhase" args={[phases, 1]} />
+        <bufferAttribute attach="attributes-aScale" args={[scales, 1]} />
+      </bufferGeometry>
+      <shaderMaterial
+        ref={material}
+        vertexShader={dustVertex}
+        fragmentShader={dustFragment}
+        uniforms={uniforms}
+        transparent
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
+  );
+}

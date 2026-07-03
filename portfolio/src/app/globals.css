@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --encre: #22252d;
+  --acier: #4c586c;
+  --brume: #a7aeb9;
+  --os: #e7e2d6;
+  --poudre: #c9a6a2;
+  --rose: #b98e8b;
+  --dore: #d3c8a6;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden; /* 滚动由 3D 空间接管，页面本身不滚动 */
+  background: var(--encre);
+  color: var(--os);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  cursor: crosshair; /* 实验室般的默认光标，呼应无按钮设计 */
+}
+
+::selection {
+  background: var(--poudre);
+  color: var(--encre);
+}
+
+/* ————————————————————————————————————————
+   全局颗粒 (Grain) — SVG feTurbulence 噪点，
+   覆盖包括 DOM 面板在内的一切，统一“艺术插画”质感。
+   ———————————————————————————————————————— */
+body::after {
+  content: "";
+  position: fixed;
+  inset: -60%;
+  width: 220%;
+  height: 220%;
+  pointer-events: none;
+  z-index: 80;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 1.1s steps(6) infinite;
+}
+
+@keyframes grain {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(-2%, 1.4%); }
+  40%  { transform: translate(1.2%, -1.8%); }
+  60%  { transform: translate(-1.6%, -0.8%); }
+  80%  { transform: translate(2%, 1%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ————————————————————————————————————————
+   3D 空间内的排版元素（drei <Html> 渲染）
+   ———————————————————————————————————————— */
+.node-label {
+  font-family: theme("fontFamily.mono");
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--os);
+  white-space: nowrap;
+  text-align: center;
+  opacity: 0.5;
+  transition: opacity 0.5s ease, letter-spacing 0.5s ease;
+  user-select: none;
+}
+.node-label em {
+  display: block;
+  margin-top: 4px;
+  font-style: normal;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--brume);
+}
+.node-label.is-active {
+  opacity: 1;
+  letter-spacing: 0.26em;
+}
+
+.cluster-label {
+  font-family: theme("fontFamily.display");
+  color: var(--os);
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+}
+.cluster-label i {
+  display: block;
+  font-family: theme("fontFamily.mono");
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  color: var(--poudre);
+  margin-bottom: 10px;
+}
+.cluster-label b {
+  display: block;
+  font-weight: 500;
+  font-size: 44px;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+.cluster-label span {
+  display: block;
+  margin-top: 10px;
+  font-family: theme("fontFamily.mono");
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: var(--brume);
+}
+
+/* 细发丝分隔线 */
+.hairline {
+  background: linear-gradient(to bottom, transparent, var(--brume), transparent);
+  width: 1px;
+}
