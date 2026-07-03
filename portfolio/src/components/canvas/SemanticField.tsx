@@ -69,12 +69,12 @@ function Gateway({ section }: { section: SectionMeta }) {
   return (
     <group position={[cx, cy, cz + 3.4]}>
       <mesh ref={inner}>
-        <torusGeometry args={[3.1, 0.012, 8, 160]} />
-        <meshBasicMaterial color={accent} transparent opacity={0.55} />
+        <torusGeometry args={[3.1, 0.008, 8, 160]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.38} />
       </mesh>
       <mesh ref={outer} position={[0, 0, -0.6]}>
-        <torusGeometry args={[3.55, 0.006, 8, 160]} />
-        <meshBasicMaterial color={accent} transparent opacity={0.3} />
+        <torusGeometry args={[3.55, 0.005, 8, 160]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.2} />
       </mesh>
     </group>
   );

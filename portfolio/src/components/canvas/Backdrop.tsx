@@ -28,12 +28,12 @@ export function Backdrop() {
       uScroll: { value: 0 },
       uResolution: { value: new THREE.Vector2(1, 1) },
       uHaut: { value: new THREE.Color(palette.ivoire) },
-      uBas: { value: new THREE.Color("#e2ddd2") },
+      uBas: { value: new THREE.Color("#e8e4da") },
       uRose: { value: new THREE.Color(sectionGlow.etudes) },
       uBleu: { value: new THREE.Color(sectionGlow.carriere) },
       uDore: { value: new THREE.Color(sectionGlow.intelligence) },
       uAccent: { value: new THREE.Color(sectionGlow.etudes) },
-      uOmbre: { value: new THREE.Color("#b9b4a8") },
+      uOmbre: { value: new THREE.Color("#cfcdc6") },
     }),
     []
   );

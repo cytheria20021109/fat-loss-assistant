@@ -65,6 +65,11 @@ export const atmosphereFragment = /* glsl */ `
     return pow(max(1.0 - d / radius, 0.0), 2.4);
   }
 
+  // 滤色 (screen) 混合 —— 光只会提亮画面，永远不会搅浑发灰
+  vec3 screenBlend(vec3 base, vec3 light, float amount) {
+    return 1.0 - (1.0 - base) * (1.0 - light * amount);
+  }
+
   void main() {
     vec2 uv = vUv;
     float aspect = uResolution.x / max(uResolution.y, 1.0);
@@ -74,30 +79,30 @@ export const atmosphereFragment = /* glsl */ `
     // 1 · 瓷白垂直渐变
     vec3 col = mix(uBas, uHaut, smoothstep(0.0, 1.1, uv.y));
 
-    // 2 · 云雾 —— 以「压深」而非提亮的方式呈现，浅底上更像水彩纸纹
+    // 2 · 云雾 —— 极轻的纸纹起伏
     float mist = fbm(st * 2.0 + vec2(t * 0.014, -t * 0.007));
-    col = mix(col, uBas * 0.97, mist * 0.18);
+    col = mix(col, uBas, mist * 0.10);
 
-    // 3 · 三团粉彩柔光，各自缓慢游移（缤纷但低饱和）
+    // 3 · 三团粉彩柔光（滤色叠加，干净透亮），各自缓慢游移
     vec2 pRose = vec2(0.22 * aspect + 0.06 * sin(t * 0.05),        0.72 + 0.05 * cos(t * 0.043));
     vec2 pBleu = vec2(0.80 * aspect + 0.07 * cos(t * 0.037),       0.46 + 0.06 * sin(t * 0.049));
     vec2 pDore = vec2(0.50 * aspect + 0.08 * sin(t * 0.031 + 2.0), 0.16 + 0.05 * cos(t * 0.041));
 
-    col = mix(col, uRose, glow(st, pRose, 0.85) * 0.5);
-    col = mix(col, uBleu, glow(st, pBleu, 0.9)  * 0.45);
-    col = mix(col, uDore, glow(st, pDore, 0.8)  * 0.4);
+    col = screenBlend(col, uRose, glow(st, pRose, 0.85) * 0.5);
+    col = screenBlend(col, uBleu, glow(st, pBleu, 0.9)  * 0.45);
+    col = screenBlend(col, uDore, glow(st, pDore, 0.8)  * 0.4);
 
     // 4 · 章节光 —— 随穿行换色，从上方晕染，是空间层次的“天色”
     vec2 pAccent = vec2(0.5 * aspect, 1.05 - uScroll * 0.18);
-    col = mix(col, uAccent, glow(st, pAccent, 1.15) * 0.55);
+    col = screenBlend(col, uAccent, glow(st, pAccent, 1.15) * 0.5);
 
-    // 5a · 极浅暗角
+    // 5a · 极浅的冷灰暗角（只收边，不染色）
     vec2 c = uv - 0.5;
-    col = mix(col, uOmbre, dot(c, c) * 0.35);
+    col = mix(col, uOmbre, dot(c, c) * 0.22);
 
     // 5b · 胶片颗粒
     float grain = hash(uv * uResolution.xy + fract(t) * 61.7) - 0.5;
-    col += grain * 0.028;
+    col += grain * 0.022;
 
     gl_FragColor = vec4(col, 1.0);
   }

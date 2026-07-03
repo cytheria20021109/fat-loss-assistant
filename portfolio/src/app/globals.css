@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --fond: #ece9e1;
-  --ivoire: #f7f4ed;
+  --fond: #f0ede6;
+  --ivoire: #faf7f1;
   --encre: #3a3f4b;
   --gris: #8b909c;
-  --rose: #c4857c;
-  --bleu: #7e97b8;
-  --dore: #c0a35e;
+  --rose: #cf8d84;
+  --bleu: #85a0c4;
+  --dore: #c9a964;
 }
 
 html,
@@ -123,9 +123,12 @@ body::after {
   width: 1px;
 }
 
-/* 流水席面板：隐藏滚动条但保留滚动 */
+/* 流水席面板：隐藏滚动条但保留顺滑滚动（含移动端惯性） */
 .dossier-scroll {
   scrollbar-width: none;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .dossier-scroll::-webkit-scrollbar {
   display: none;

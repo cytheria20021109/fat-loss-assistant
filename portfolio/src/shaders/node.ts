@@ -38,9 +38,8 @@ export const nodeFragment = /* glsl */ `
     // 呼吸 —— 每个节点相位不同
     float pulse = 0.5 + 0.5 * sin(uTime * 1.3 + uSeed * 6.2831);
 
-    // 浅底上：激活时轮廓色加深而非发白
-    vec3 rim = uColorRim * mix(1.0, 0.82, uActivation);
-    vec3 col = mix(uColorCore, rim, fresnel * (0.75 + 0.25 * uActivation));
+    // 通透的玻璃感：轮廓色保持明净，激活时只增强存在感、不压暗
+    vec3 col = mix(uColorCore, uColorRim, fresnel * (0.7 + 0.3 * uActivation));
 
     float alpha = (0.24 + 0.85 * fresnel)
                 * (0.72 + 0.28 * uActivation)

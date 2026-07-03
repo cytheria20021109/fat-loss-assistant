@@ -60,10 +60,11 @@ export function NodeDossier() {
           className="dossier-scroll fixed inset-y-0 right-0 z-30 w-full max-w-xl overflow-y-auto"
           style={{
             background:
-              "linear-gradient(to left, rgba(247,244,237,0.96) 62%, rgba(247,244,237,0.78) 82%, rgba(247,244,237,0))",
+              "linear-gradient(to left, rgba(250,247,241,0.96) 62%, rgba(250,247,241,0.8) 82%, rgba(250,247,241,0))",
           }}
         >
-          <div className="flex min-h-full flex-col justify-center px-10 py-28 md:px-16">
+          {/* 从顶部自然流下的排版：内容可长可短，滚动手感与普通页面一致 */}
+          <div className="px-10 pb-32 pt-[18vh] md:px-16">
             {/* 章节眉题 */}
             <motion.p
               variants={line}
