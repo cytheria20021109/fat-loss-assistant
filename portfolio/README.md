@@ -14,7 +14,7 @@
 ## 目录结构
 
 ```
-portfolio/
+espace-semantique/
 ├── src/
 │   ├── app/                      # Next.js App Router
 │   │   ├── page.tsx              # 首页（服务端取数 → 3D 场景）
@@ -48,10 +48,11 @@ portfolio/
 ## 运行
 
 ```bash
-cd portfolio
 npm install
 npm run dev      # http://localhost:3000
 ```
+
+推送到 `main` 即自动构建并部署到 GitHub Pages（见 `.github/workflows/deploy-pages.yml`）。
 
 ## 交互语言（无按钮）
 

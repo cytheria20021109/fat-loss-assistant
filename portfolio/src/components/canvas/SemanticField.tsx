@@ -5,14 +5,17 @@ import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { SemanticNode } from "./SemanticNode";
-import { palette } from "@/lib/palette";
+import { palette, sectionAccent } from "@/lib/palette";
 import { useSpace } from "@/lib/store";
 import type { SectionMeta, WorldNode } from "@/server/modules/portfolio/types";
 
 /**
- * 语义星云场 — 节点、节点间的“语义连线”、版块题名。
- * 连线规则：同版块内每个节点连向其最近的两枚邻居（去重），
- * 版块中心之间再以一条暗线相续，构成穿越全场的隐约路径。
+ * 语义星云场 — 节点、语义连线、版块题名与「色环之门」。
+ *
+ * 层次设计：
+ * · 每个版块入口悬着两枚同心色环（该版块的彩度），穿过它 = 进入新章节
+ * · 版块之间以一条暗线相续，构成穿越全场的隐约路径
+ * · 连线只在版块内部生成（最近的两枚邻居），不跨版块，结构一目了然
  */
 
 function buildEdges(nodes: WorldNode[], sections: SectionMeta[]): Float32Array {
@@ -43,12 +46,38 @@ function buildEdges(nodes: WorldNode[], sections: SectionMeta[]): Float32Array {
     }
   }
 
-  // 版块之间的隐约脉络
   for (let i = 0; i < sections.length - 1; i++) {
     segments.push(...sections[i].center, ...sections[i + 1].center);
   }
 
   return new Float32Array(segments);
+}
+
+/** 色环之门 — 版块入口的两枚同心圆环，是章节的空间锚点 */
+function Gateway({ section }: { section: SectionMeta }) {
+  const accent = sectionAccent[section.id];
+  const [cx, cy, cz] = section.center;
+  const inner = useRef<THREE.Mesh>(null);
+  const outer = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    if (inner.current) inner.current.rotation.z = t * 0.05;
+    if (outer.current) outer.current.rotation.z = -t * 0.035;
+  });
+
+  return (
+    <group position={[cx, cy, cz + 3.4]}>
+      <mesh ref={inner}>
+        <torusGeometry args={[3.1, 0.012, 8, 160]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.55} />
+      </mesh>
+      <mesh ref={outer} position={[0, 0, -0.6]}>
+        <torusGeometry args={[3.55, 0.006, 8, 160]} />
+        <meshBasicMaterial color={accent} transparent opacity={0.3} />
+      </mesh>
+    </group>
+  );
 }
 
 function ClusterLabel({ section }: { section: SectionMeta }) {
@@ -63,11 +92,10 @@ function ClusterLabel({ section }: { section: SectionMeta }) {
     [section]
   );
 
-  // 题名随相机远近淡入淡出 —— 走到版块门口才看清它
   useFrame((state) => {
     if (!el.current) return;
     const dist = Math.abs(state.camera.position.z - anchor.z);
-    const opacity = THREE.MathUtils.clamp(1 - (dist - 6) / 12, 0, 0.9);
+    const opacity = THREE.MathUtils.clamp(1 - (dist - 6) / 12, 0, 0.92);
     el.current.style.opacity = String(opacity);
   });
 
@@ -79,7 +107,9 @@ function ClusterLabel({ section }: { section: SectionMeta }) {
       zIndexRange={[5, 0]}
     >
       <div ref={el} className="cluster-label" style={{ opacity: 0 }}>
-        <i>{String(section.index).padStart(2, "0")}</i>
+        <i style={{ color: sectionAccent[section.id] }}>
+          {String(section.index).padStart(2, "0")}
+        </i>
         <b>{section.nom}</b>
         <span>{section.titre}</span>
       </div>
@@ -97,22 +127,24 @@ export function SemanticField() {
 
   return (
     <group>
-      {/* 语义连线 */}
+      {/* 语义连线 —— 浅底上用墨灰细线 */}
       <lineSegments frustumCulled={false}>
         <bufferGeometry key={edges.length}>
           <bufferAttribute attach="attributes-position" args={[edges, 3]} />
         </bufferGeometry>
         <lineBasicMaterial
-          color={palette.acier}
+          color={palette.gris}
           transparent
-          opacity={0.38}
-          blending={THREE.AdditiveBlending}
+          opacity={0.35}
           depthWrite={false}
         />
       </lineSegments>
 
       {sections.map((s) => (
-        <ClusterLabel key={s.id} section={s} />
+        <group key={s.id}>
+          <Gateway section={s} />
+          <ClusterLabel section={s} />
+        </group>
       ))}
 
       {nodes.map((n) => (

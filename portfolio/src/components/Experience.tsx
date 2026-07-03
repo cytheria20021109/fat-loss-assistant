@@ -25,13 +25,19 @@ export default function Experience({ data }: { data: PortfolioPayload }) {
   }, [data, setData]);
 
   useEffect(() => {
+    // 流水席面板内部的滚动属于面板自己，不推动相机
+    const insideDossier = (target: EventTarget | null) =>
+      target instanceof Element && target.closest("[data-dossier]") != null;
+
     const onWheel = (e: WheelEvent) => {
+      if (insideDossier(e.target)) return;
       useSpace.getState().addScroll(e.deltaY * 0.00045);
     };
     const onTouchStart = (e: TouchEvent) => {
       touchY.current = e.touches[0]?.clientY ?? null;
     };
     const onTouchMove = (e: TouchEvent) => {
+      if (insideDossier(e.target)) return;
       const y = e.touches[0]?.clientY;
       if (y == null || touchY.current == null) return;
       useSpace.getState().addScroll((touchY.current - y) * 0.0016);

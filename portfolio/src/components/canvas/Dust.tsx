@@ -31,7 +31,7 @@ export function Dust() {
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
-      uColor: { value: new THREE.Color(palette.brume) },
+      uColor: { value: new THREE.Color(palette.gris) },
     }),
     []
   );
@@ -56,7 +56,6 @@ export function Dust() {
         uniforms={uniforms}
         transparent
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
       />
     </points>
   );

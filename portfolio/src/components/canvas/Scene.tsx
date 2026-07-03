@@ -22,8 +22,8 @@ export function Scene() {
       camera={{ fov: 55, near: 0.1, far: 140, position: [0, 0, CAMERA_PATH.start] }}
       onPointerMissed={() => setFocused(null)}
     >
-      <color attach="background" args={[palette.encre]} />
-      <fog attach="fog" args={[palette.encre, 18, 64]} />
+      <color attach="background" args={[palette.fond]} />
+      <fog attach="fog" args={[palette.fond, 18, 64]} />
       <Backdrop />
       <Dust />
       <SemanticField />

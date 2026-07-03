@@ -1,14 +1,15 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useSpace } from "@/lib/store";
-import { sectionScrollTarget } from "@/lib/palette";
+import { sectionAccent, sectionScrollTarget } from "@/lib/palette";
 
 /**
  * DOM 覆盖层 — 纯排版，无按钮。
  * · 左上：字标
  * · 右缘：版块索引（悬停浮现说明，单击滑行至该星团）
  * · 左缘：滚动进度发丝线
+ * · 左下：当前章节指示（层次的常驻锚点）
  * · 底部：首次访问的引导语，一旦滚动即隐去
  */
 export function Overlay() {
@@ -19,10 +20,10 @@ export function Overlay() {
   const setScroll = useSpace((s) => s.setScroll);
   const setFocused = useSpace((s) => s.setFocused);
 
-  // 依据滚动进度推断当前所在版块
   const activeIndex = sections.reduce((acc, s, i) => {
-    return scroll >= sectionScrollTarget(s.center[2]) - 0.12 ? i : acc;
+    return scroll >= sectionScrollTarget(s.center[2]) - 0.14 ? i : acc;
   }, 0);
+  const active = sections[activeIndex];
 
   return (
     <div className="pointer-events-none fixed inset-0 z-20 select-none">
@@ -33,20 +34,47 @@ export function Overlay() {
         transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
         className="absolute left-8 top-8"
       >
-        <h1 className="font-display text-xl tracking-vaste text-os">
+        <h1 className="font-display text-xl tracking-vaste text-encre">
           {profile?.name ?? ""}
         </h1>
-        <p className="mt-2 font-mono text-[10px] tracking-air text-brume">
+        <p className="mt-2 font-mono text-[10px] tracking-air text-gris">
           {profile?.role} · Espace Sémantique
         </p>
       </motion.header>
 
       {/* 滚动进度发丝线 */}
-      <div className="absolute left-8 top-1/2 h-40 w-px -translate-y-1/2 bg-acier/30">
+      <div className="absolute left-8 top-1/2 h-40 w-px -translate-y-1/2 bg-gris/25">
         <div
-          className="w-px bg-os/80 transition-[height] duration-300 ease-out"
+          className="w-px bg-encre/70 transition-[height] duration-300 ease-out"
           style={{ height: `${scroll * 100}%` }}
         />
+      </div>
+
+      {/* 当前章节指示 —— 左下角常驻，随穿行换字换色 */}
+      <div className="absolute bottom-10 left-8">
+        <AnimatePresence mode="wait">
+          {active && (
+            <motion.div
+              key={active.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="flex items-baseline gap-3"
+            >
+              <span
+                className="inline-block h-2 w-2 -translate-y-px rounded-full"
+                style={{ backgroundColor: sectionAccent[active.id] }}
+              />
+              <span className="font-mono text-[10px] tracking-vaste text-encre/80">
+                {String(active.index).padStart(2, "0")} {active.nom}
+              </span>
+              <span className="font-mono text-[10px] tracking-air text-gris">
+                {active.titre}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* 版块索引 —— 悬停浮现中文名，单击滑行 */}
@@ -63,12 +91,15 @@ export function Overlay() {
               >
                 <span
                   className={`font-mono text-[10px] tracking-vaste transition-colors duration-500 ${
-                    i === activeIndex ? "text-os" : "text-brume/50"
-                  } group-hover:text-poudre`}
+                    i === activeIndex ? "text-encre" : "text-gris/60"
+                  }`}
+                  style={
+                    i === activeIndex ? { color: sectionAccent[s.id] } : undefined
+                  }
                 >
                   {String(s.index).padStart(2, "0")} {s.nom}
                 </span>
-                <span className="block max-h-0 overflow-hidden font-mono text-[9px] tracking-air text-brume/70 opacity-0 transition-all duration-500 group-hover:max-h-6 group-hover:pt-1 group-hover:opacity-100">
+                <span className="block max-h-0 overflow-hidden font-mono text-[9px] tracking-air text-gris opacity-0 transition-all duration-500 group-hover:max-h-6 group-hover:pt-1 group-hover:opacity-100">
                   {s.titre} · {s.tagline}
                 </span>
               </div>
@@ -83,10 +114,10 @@ export function Overlay() {
         transition={{ duration: 1.2 }}
         className="absolute bottom-10 left-1/2 -translate-x-1/2 text-center"
       >
-        <p className="font-display text-sm italic tracking-air text-brume">
+        <p className="font-display text-sm italic tracking-air text-gris">
           {profile?.motto}
         </p>
-        <p className="mt-4 font-mono text-[9px] uppercase tracking-vaste text-brume/60">
+        <p className="mt-4 font-mono text-[9px] uppercase tracking-vaste text-gris/70">
           défiler pour dériver · survoler pour lire · cliquer pour approcher
         </p>
         <div className="mx-auto mt-4 hairline h-10" />
@@ -100,7 +131,7 @@ export function Overlay() {
         className="pointer-events-auto absolute bottom-8 right-8 text-right not-italic"
       >
         {profile?.location && (
-          <p className="font-mono text-[9px] tracking-air text-brume/50">
+          <p className="font-mono text-[9px] tracking-air text-gris/70">
             {profile.location}
           </p>
         )}
@@ -108,7 +139,7 @@ export function Overlay() {
           {profile?.email && (
             <a
               href={`mailto:${profile.email}`}
-              className="text-brume/60 transition-colors duration-500 hover:text-poudre"
+              className="text-gris transition-colors duration-500 hover:text-rose"
             >
               courriel
             </a>
@@ -118,7 +149,7 @@ export function Overlay() {
               href={profile.linkedin}
               target="_blank"
               rel="noreferrer"
-              className="text-brume/60 transition-colors duration-500 hover:text-poudre"
+              className="text-gris transition-colors duration-500 hover:text-rose"
             >
               linkedin
             </a>

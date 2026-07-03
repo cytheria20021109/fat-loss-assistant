@@ -5,7 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { Html, useCursor } from "@react-three/drei";
 import * as THREE from "three";
 import { nodeVertex, nodeFragment } from "@/shaders/node";
-import { palette, sectionAccent } from "@/lib/palette";
+import { palette, sectionAccent, activeSectionAt } from "@/lib/palette";
 import { useSpace } from "@/lib/store";
 import type { WorldNode } from "@/server/modules/portfolio/types";
 
@@ -17,8 +17,9 @@ function seedFromId(id: string): number {
 }
 
 /**
- * 语义节点 — 空间中的一枚“记忆”。
- * 悬停：光晕亮起、标签清晰；单击：相机滑近并展开档案。
+ * 语义节点 — 空间中的一枚“玻璃记忆”。
+ * 悬停：轮廓加深、标签清晰；单击：相机滑近并展开档案。
+ * 层次：只有当前版块的节点完全显影，其余退成淡影。
  */
 export function SemanticNode({ node }: { node: WorldNode }) {
   const group = useRef<THREE.Group>(null);
@@ -37,9 +38,10 @@ export function SemanticNode({ node }: { node: WorldNode }) {
 
   const uniforms = useMemo(
     () => ({
-      uColorCore: { value: new THREE.Color(palette.brume) },
+      uColorCore: { value: new THREE.Color(palette.ivoire) },
       uColorRim: { value: new THREE.Color(sectionAccent[node.section]) },
       uActivation: { value: 0 },
+      uFade: { value: 1 },
       uTime: { value: 0 },
       uSeed: { value: seed },
     }),
@@ -48,16 +50,20 @@ export function SemanticNode({ node }: { node: WorldNode }) {
 
   useFrame((state, dt) => {
     const t = state.clock.elapsedTime;
+    const { sections, scroll } = useSpace.getState();
+    const active = activeSectionAt(sections, scroll);
+    // 当前版块 or 被凝视/悬停的节点 → 完全显影
+    const inFocusLayer = node.section === active || hovered || focused;
 
     if (material.current) {
       const u = material.current.uniforms;
       u.uTime.value = t;
       const target = focused ? 1 : hovered ? 0.65 : 0;
       u.uActivation.value = THREE.MathUtils.damp(u.uActivation.value, target, 4, dt);
+      u.uFade.value = THREE.MathUtils.damp(u.uFade.value, inFocusLayer ? 1 : 0, 2.2, dt);
     }
 
     if (group.current) {
-      // 悬浮呼吸 —— 每个节点相位不同
       group.current.position.set(
         node.position[0] + Math.sin(t * 0.4 + seed * 9.0) * 0.14,
         node.position[1] + Math.sin(t * 0.55 + seed * 17.0) * 0.2,
@@ -72,11 +78,11 @@ export function SemanticNode({ node }: { node: WorldNode }) {
       group.current.scale.setScalar(s);
     }
 
-    // 标签随距离浮现：走近即读，远处静默
+    // 标签：仅当前版块 + 近处才浮现，避免远处文字互相干扰
     if (label.current && group.current) {
       const dist = state.camera.position.distanceTo(group.current.position);
       const near = THREE.MathUtils.clamp(1 - (dist - 7) / 7, 0, 1);
-      const base = hovered || focused ? 1 : near * 0.75;
+      const base = hovered || focused ? 1 : inFocusLayer ? near * 0.8 : 0;
       label.current.style.opacity = String(base);
     }
   });
