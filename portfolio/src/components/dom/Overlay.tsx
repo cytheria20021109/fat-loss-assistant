@@ -27,20 +27,18 @@ export function Overlay() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-20 select-none">
-      {/* 字标 */}
-      <motion.header
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1], delay: 0.4 }}
-        className="absolute left-8 top-8"
+      {/* 字标 —— Hero 期间隐身，入云后浮现 */}
+      <header
+        className="absolute left-8 top-8 transition-opacity duration-700"
+        style={{ opacity: Math.min(1, Math.max(0, (scroll - 0.05) / 0.05)) }}
       >
-        <h1 className="font-display text-xl tracking-vaste text-encre">
+        <h1 className="font-display text-2xl tracking-vaste text-encre">
           {profile?.name ?? ""}
         </h1>
         <p className="mt-2 font-mono text-[10px] tracking-air text-gris">
           {profile?.role} · Espace Sémantique
         </p>
-      </motion.header>
+      </header>
 
       {/* 滚动进度发丝线 */}
       <div className="absolute left-8 top-1/2 h-40 w-px -translate-y-1/2 bg-gris/25">
@@ -108,19 +106,15 @@ export function Overlay() {
         </ul>
       </nav>
 
-      {/* 引导语 —— 一旦开始滚动即告别 */}
+      {/* 交互提示 —— 进入星云后短暂陪伴，聚焦过一次即隐去 */}
       <motion.footer
-        animate={{ opacity: hasScrolled ? 0 : 1 }}
-        transition={{ duration: 1.2 }}
+        animate={{ opacity: hasScrolled && scroll > 0.06 && scroll < 0.9 ? 1 : 0 }}
+        transition={{ duration: 1 }}
         className="absolute bottom-10 left-1/2 -translate-x-1/2 text-center"
       >
-        <p className="font-display text-sm italic tracking-air text-gris">
-          {profile?.motto}
+        <p className="font-mono text-[9px] uppercase tracking-vaste text-gris/60">
+          survoler pour lire · cliquer pour approcher —— 悬停阅读 · 单击靠近
         </p>
-        <p className="mt-4 font-mono text-[9px] uppercase tracking-vaste text-gris/70">
-          défiler pour dériver · survoler pour lire · cliquer pour approcher
-        </p>
-        <div className="mx-auto mt-4 hairline h-10" />
       </motion.footer>
 
       {/* 联络坐标 —— 右下角，纯文字，悬停显影 */}

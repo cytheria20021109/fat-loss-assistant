@@ -63,21 +63,22 @@ body::after {
    ———————————————————————————————————————— */
 .node-label {
   font-family: theme("fontFamily.mono");
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--encre);
   white-space: nowrap;
   text-align: center;
-  opacity: 0.55;
+  opacity: 0.65;
   transition: opacity 0.5s ease, letter-spacing 0.5s ease;
   user-select: none;
 }
 .node-label em {
   display: block;
-  margin-top: 4px;
+  margin-top: 5px;
   font-style: normal;
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.24em;
   color: var(--gris);
 }
@@ -87,34 +88,60 @@ body::after {
 }
 
 .cluster-label {
+  position: relative;
   font-family: theme("fontFamily.display");
   color: var(--encre);
   text-align: center;
   white-space: nowrap;
   user-select: none;
 }
+.cluster-ghost {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -58%);
+  font-family: theme("fontFamily.display");
+  font-size: 260px;
+  font-weight: 500;
+  text-decoration: none;
+  line-height: 1;
+  opacity: 0.09;
+  pointer-events: none;
+  z-index: -1;
+}
 .cluster-label i {
   display: block;
   font-family: theme("fontFamily.mono");
   font-style: normal;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.5em;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 .cluster-label b {
   display: block;
   font-weight: 500;
-  font-size: 44px;
+  font-size: 58px;
   letter-spacing: 0.12em;
   line-height: 1;
 }
 .cluster-label span {
   display: block;
-  margin-top: 10px;
+  margin-top: 12px;
   font-family: theme("fontFamily.mono");
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.4em;
   color: var(--gris);
+}
+.cluster-these {
+  margin: 16px auto 0;
+  max-width: 34ch;
+  white-space: normal;
+  font-family: theme("fontFamily.display");
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.8;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--encre) 72%, transparent);
 }
 
 /* 细发丝分隔线 */

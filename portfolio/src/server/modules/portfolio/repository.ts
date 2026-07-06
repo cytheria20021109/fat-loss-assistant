@@ -1,4 +1,9 @@
-import type { Profile, SectionSeed } from "./types";
+import type {
+  EpilogueGroup,
+  NarrativeLine,
+  Profile,
+  SectionSeed,
+} from "./types";
 import raw from "@/server/data/portfolio.json";
 
 /**
@@ -12,6 +17,8 @@ import raw from "@/server/data/portfolio.json";
 interface PortfolioSource {
   profile: Profile;
   sections: SectionSeed[];
+  narrative: NarrativeLine[];
+  epilogue: EpilogueGroup[];
 }
 
 export async function findProfile(): Promise<Profile> {
@@ -24,4 +31,12 @@ export async function findAllSections(): Promise<SectionSeed[]> {
 
 export async function findSectionById(id: string): Promise<SectionSeed | undefined> {
   return (raw as PortfolioSource).sections.find((s) => s.id === id);
+}
+
+export async function findNarrative(): Promise<NarrativeLine[]> {
+  return (raw as PortfolioSource).narrative ?? [];
+}
+
+export async function findEpilogue(): Promise<EpilogueGroup[]> {
+  return (raw as PortfolioSource).epilogue ?? [];
 }

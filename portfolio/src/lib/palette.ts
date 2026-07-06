@@ -30,7 +30,7 @@ export const sectionGlow: Record<SectionId, string> = {
 };
 
 /** 相机漫游的纵深范围（世界坐标 z）。end 停在最深星团之前。 */
-export const CAMERA_PATH = { start: 8, end: -36 } as const;
+export const CAMERA_PATH = { start: 8, end: -50 } as const;
 
 /** 由版块中心推算它在滚动进度 [0,1] 上的位置 */
 export function sectionScrollTarget(centerZ: number): number {

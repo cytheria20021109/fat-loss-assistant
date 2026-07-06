@@ -2,6 +2,8 @@
 
 import { create } from "zustand";
 import type {
+  EpilogueGroup,
+  NarrativeLine,
   PortfolioPayload,
   Profile,
   SectionMeta,
@@ -17,6 +19,8 @@ interface SpaceState {
   profile: Profile | null;
   sections: SectionMeta[];
   nodes: WorldNode[];
+  narrative: NarrativeLine[];
+  epilogue: EpilogueGroup[];
 
   hoveredId: string | null;
   focusedId: string | null;
@@ -37,6 +41,8 @@ export const useSpace = create<SpaceState>((set) => ({
   profile: null,
   sections: [],
   nodes: [],
+  narrative: [],
+  epilogue: [],
 
   hoveredId: null,
   focusedId: null,
@@ -48,6 +54,8 @@ export const useSpace = create<SpaceState>((set) => ({
       profile: payload.profile,
       sections: payload.sections,
       nodes: payload.nodes,
+      narrative: payload.narrative,
+      epilogue: payload.epilogue,
     }),
 
   setHovered: (id) => set({ hoveredId: id }),

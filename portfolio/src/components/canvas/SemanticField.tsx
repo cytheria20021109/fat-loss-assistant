@@ -86,7 +86,7 @@ function ClusterLabel({ section }: { section: SectionMeta }) {
     () =>
       new THREE.Vector3(
         section.center[0],
-        section.center[1] + 2.8,
+        section.center[1] + 2.5,
         section.center[2] + 1.5
       ),
     [section]
@@ -95,8 +95,10 @@ function ClusterLabel({ section }: { section: SectionMeta }) {
   useFrame((state) => {
     if (!el.current) return;
     const dist = Math.abs(state.camera.position.z - anchor.z);
-    const opacity = THREE.MathUtils.clamp(1 - (dist - 6) / 12, 0, 0.92);
-    el.current.style.opacity = String(opacity);
+    // 山形显隐：太远看不见（雾里，且给过渡句让路），太近让路（不挡视线）
+    const far = THREE.MathUtils.clamp(1 - (dist - 5) / 5, 0, 1);
+    const near = THREE.MathUtils.clamp((dist - 2.2) / 2, 0, 1);
+    el.current.style.opacity = String(far * near * 0.92);
   });
 
   return (
@@ -107,11 +109,15 @@ function ClusterLabel({ section }: { section: SectionMeta }) {
       zIndexRange={[5, 0]}
     >
       <div ref={el} className="cluster-label" style={{ opacity: 0 }}>
+        <u className="cluster-ghost" style={{ color: sectionAccent[section.id] }}>
+          {String(section.index).padStart(2, "0")}
+        </u>
         <i style={{ color: sectionAccent[section.id] }}>
           {String(section.index).padStart(2, "0")}
         </i>
         <b>{section.nom}</b>
         <span>{section.titre}</span>
+        {section.these && <p className="cluster-these">{section.these}</p>}
       </div>
     </Html>
   );

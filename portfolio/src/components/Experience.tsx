@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Overlay } from "./dom/Overlay";
+import { NarrativeLayer } from "./dom/NarrativeLayer";
 import { NodeDossier } from "./dom/NodeDossier";
 import { useSpace } from "@/lib/store";
 import type { PortfolioPayload } from "@/server/modules/portfolio/types";
@@ -62,6 +63,7 @@ export default function Experience({ data }: { data: PortfolioPayload }) {
   return (
     <main className="fixed inset-0">
       <Scene />
+      <NarrativeLayer />
       <Overlay />
       <NodeDossier />
     </main>

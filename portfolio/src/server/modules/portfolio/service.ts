@@ -25,6 +25,8 @@ function toWorldNodes(section: SectionSeed): WorldNode[] {
     title: n.title,
     subtitle: n.subtitle,
     period: n.period,
+    summary: n.summary,
+    metrics: n.metrics,
     details: n.details,
     tags: n.tags,
     position: [cx + n.offset[0], cy + n.offset[1], cz + n.offset[2]],
@@ -33,14 +35,18 @@ function toWorldNodes(section: SectionSeed): WorldNode[] {
 }
 
 export async function getPortfolio(): Promise<PortfolioPayload> {
-  const [profile, sections] = await Promise.all([
+  const [profile, sections, narrative, epilogue] = await Promise.all([
     repository.findProfile(),
     repository.findAllSections(),
+    repository.findNarrative(),
+    repository.findEpilogue(),
   ]);
   return {
     profile,
     sections: sections.map(toMeta),
     nodes: sections.flatMap(toWorldNodes),
+    narrative,
+    epilogue,
   };
 }
 
