@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --fond: #f0ede6;
+  --ivoire: #faf7f1;
+  --encre: #3a3f4b;
+  --gris: #8b909c;
+  --rose: #cf8d84;
+  --bleu: #85a0c4;
+  --dore: #c9a964;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden; /* 滚动由 3D 空间接管，页面本身不滚动 */
+  background: var(--fond);
+  color: var(--encre);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  cursor: crosshair; /* 实验室般的默认光标，呼应无按钮设计 */
+}
+
+::selection {
+  background: var(--rose);
+  color: var(--ivoire);
+}
+
+/* ————————————————————————————————————————
+   全局颗粒 (Grain) — SVG feTurbulence 噪点。
+   浅色底上用 multiply 混合，呈现纸面/艺术微喷的颗粒感。
+   ———————————————————————————————————————— */
+body::after {
+  content: "";
+  position: fixed;
+  inset: -60%;
+  width: 220%;
+  height: 220%;
+  pointer-events: none;
+  z-index: 80;
+  opacity: 0.055;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 1.1s steps(6) infinite;
+}
+
+@keyframes grain {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(-2%, 1.4%); }
+  40%  { transform: translate(1.2%, -1.8%); }
+  60%  { transform: translate(-1.6%, -0.8%); }
+  80%  { transform: translate(2%, 1%); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ————————————————————————————————————————
+   3D 空间内的排版元素（drei <Html> 渲染）
+   ———————————————————————————————————————— */
+.node-label {
+  font-family: theme("fontFamily.mono");
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--encre);
+  white-space: nowrap;
+  text-align: center;
+  opacity: 0.65;
+  transition: opacity 0.5s ease, letter-spacing 0.5s ease;
+  user-select: none;
+}
+.node-label em {
+  display: block;
+  margin-top: 5px;
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: var(--gris);
+}
+.node-label.is-active {
+  opacity: 1;
+  letter-spacing: 0.26em;
+}
+
+.cluster-label {
+  position: relative;
+  font-family: theme("fontFamily.display");
+  color: var(--encre);
+  text-align: center;
+  white-space: nowrap;
+  user-select: none;
+}
+.cluster-ghost {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -58%);
+  font-family: theme("fontFamily.display");
+  font-size: 260px;
+  font-weight: 500;
+  text-decoration: none;
+  line-height: 1;
+  opacity: 0.09;
+  pointer-events: none;
+  z-index: -1;
+}
+.cluster-label i {
+  display: block;
+  font-family: theme("fontFamily.mono");
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.5em;
+  margin-bottom: 12px;
+}
+.cluster-label b {
+  display: block;
+  font-weight: 500;
+  font-size: 58px;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+.cluster-label span {
+  display: block;
+  margin-top: 12px;
+  font-family: theme("fontFamily.mono");
+  font-size: 12px;
+  letter-spacing: 0.4em;
+  color: var(--gris);
+}
+.cluster-these {
+  margin: 16px auto 0;
+  max-width: 34ch;
+  white-space: normal;
+  font-family: theme("fontFamily.display");
+  font-style: italic;
+  font-size: 14px;
+  line-height: 1.8;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--encre) 72%, transparent);
+}
+
+/* 细发丝分隔线 */
+.hairline {
+  background: linear-gradient(to bottom, transparent, var(--gris), transparent);
+  width: 1px;
+}
+
+/* 流水席面板：隐藏滚动条但保留顺滑滚动（含移动端惯性） */
+.dossier-scroll {
+  scrollbar-width: none;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.dossier-scroll::-webkit-scrollbar {
+  display: none;
+}
